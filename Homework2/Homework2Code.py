@@ -24,7 +24,9 @@ def date_pass(string_date):
 today = datetime.datetime.today()
 
 int_file = "inputDates.txt"
+output_file = "parsedDates.txt"
 
+list_dates = []
 
 with open(int_file, "r") as file:
     for line in file:
@@ -49,4 +51,7 @@ while True:
         date = date_new_format.strftime("%m/%d/%Y")
         print(date)
 
+with open(output_file, "w") as output:
+    for date in list_dates:
+        output.write(date)
 
