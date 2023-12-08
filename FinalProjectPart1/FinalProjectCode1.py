@@ -1,4 +1,4 @@
-# Joshua Guajardo     PSID:1811892
+# Joshua Guajardo       PSID: 1811892
 
 import csv
 import datetime
@@ -21,14 +21,12 @@ def read_data_file(file):        #function to read input files
             info.append(row)
     return info
 
-
 def process_student_info():     #function to process the three files
     student_info = read_data_file('StudentsMajorsList.csv')   #reads each file and makes them an object
     gpa_info = read_data_file('GPAList.csv')
     grad_info = read_data_file('GraduationDatesList.csv')
 
-    student_dict = {}  #an empty dictionary to store all student information
-
+    student_dict = {}
 
     for data in student_info: #for loop used to iterate over the students major list and uses their student id as a key to assign them in the dictionary
         student_id, last_name, first_name, major, discipline = data  #unpacks the values of data and used for indexing
@@ -49,85 +47,72 @@ def process_student_info():     #function to process the three files
     return sort_students
 
 
-def sort_last_name(name): #funtion used to sort by last names
-    return name.last_name
 
-def sort_gpa(smart_kid): #function used to sort by gpa
-    return smart_kid[4]
+def sort_last_name(student): #funtion used to sort by last names
+    return student.last_name
 
-def sort_grad_date(date): #function used to sort by graduation date
-    return date[3]
+def sort_gpa(student): #function used to sort by gpa
+    return student.gpa
 
-
-def write_roster_file(sort_students):    #function used to write the full roster file
-
-    full_roster = []     #list to store information
-
-    for student in sort_students:       #for loop that iterates over the sorted list
-        row = [student.student_id, student.major, student.first_name, student.last_name, student.gpa, student.graduation_date.strftime("%m/%d/%Y"), student.discipline]   # grabs attributes from the list
-
-        full_roster.append(row)  #adds them to the roster list
-
-    with open('FullRoster.csv', mode='w', newline='') as file:    #writes the roster list into a csv file
-        write_file = csv.writer(file)
-        write_file.writerows(full_roster)
+def sort_grad_date(student): #function used to sort by graduation date
+    return student.graduation_date
 
 
-def write_major_file(sort_students): #function used to to write major files
+def student_query(sort_students): #function for query
+    while True:
+        try:
+            q_major = input('Enter major \n')  #sets input as object
+            q_gpa = float(input('Enter GPA \n')) #sets input as object
+        except ValueError:
+            print('Invalid Input.' #what is oupttued when an value error has occured
+            continue
 
-    major = {} #dictionary used to store major information
-
-    for student in sort_students: #for loop that iterates over sorted list
-        major_info = f"{student.major.replace(' ', '')}Students.csv"   #creates a string for each major and removes the spaces between each word
-        if major_info not in major: #if a major is not in the dictionary  it creates a new new list
-            major[major_info] = []
-        major[major_info].append([student.student_id, student.last_name, student.first_name, student.graduation_date.strftime("%m/%d/%Y"), student.discipline]) #appends the attributes to each major list
-
-
-    for major_info, major in major.items(): # for loop to write a file for each major and the information
-        with open(major_info, mode='w', newline='') as file:
-            write_file = csv.writer(file)
-            write_file.writerows(major)
+        filter_student = [] #list for the students who meet the major query
+        for kid in sort_students:
+            if q_major.lower() == kid.major.lower():  #checking to see if a students' major matches the query and appends the student to the list
+                filter_student.append(kid)
 
 
+        range_students = [] #list for the gpa of students
+        for kid in sort_students:
+            if abs(q_gpa - kid.gpa) <= 0.1: #checks to see if the gpa maches the query and appends them to the list
+                range_students.append(kid)
 
-def write_scholarship_students(sort_students): #function to write scholarship students
+        print('Your student(s):')  #outputs the mached students information
+        if range_students:
+            for kid in range_students:
+                print(f'{kid.student_id}: {kid.first_name} {kid.last_name}, GPA: {kid.gpa}')
 
-    scholarship_students = [] #list created to store students
+            today_date = datetime.datetime.now() #sets todays date as an object
 
-    today_date = datetime.datetime.now().date() #used to establish today's date
-
-    for student in sort_students:  # if function used to see if student qualifies for scholarship and if they are append them to the list
-        if student.gpa > 3.8 and student.graduation_date.date() >= today_date and student.discipline != 'Y':
-            scholarship_students.append([student.student_id, student.last_name, student.first_name, student.major, student.gpa])
-
-    scholarship_students.sort(key=sort_gpa, reverse=True) #used to sort the list by gpa
-
-    with open('ScholarshipCandidates.csv', mode='w', newline='') as file: #writes a file with all the scholarship students
-        write_file = csv.writer(file)
-        write_file.writerows(scholarship_students)
-
-
-def write_discipline_students(sort_students): #function used to write bad kids list
-
-    discipline_students = [] # list to store discipline students
-
-    for student in sort_students: # for loop to see if student is a bad and if they are append their attributes to the list
-        if student.discipline == 'Y':
-            discipline_students.append([student.student_id, student.last_name, student.first_name, student.graduation_date.strftime("%m/%d/%Y")])
-
-    discipline_students.sort(key=sort_grad_date, reverse=True) #used to sort the students by graduation dates
-
-    with open('DisciplinesStudents.csv', mode='w', newline='') as file: #writes discipline list to new file
-        write_file = csv.writer(file)
-        write_file.writerows(discipline_students)
+            consider_kids = [] #creates list for students to consider
 
 
 
-if __name__ == "__main__":  #main part of the code used to execute all the functions to get the files
-    sort_students = process_student_info()
+            for kid in filter_student:     ##checks to see if students in list are near the querys inputs
+                if 0.1 < abs(q_gpa - kid.gpa) <= 0.25 and kid.graduation_date > today_date:
+                    consider_kids.append(kid)
+                    print('\n You may also consider:') #outputs the stuidents who are near the querys inputs
+                    print(f'{kid.student_id}: {kid.first_name} {kid.last_name}, GPA: {kid.gpa}')
+            if not consider_kids:
+                print('There are no other students to recommend') #outputs when no match is found
 
-    write_major_file(sort_students)
-    write_roster_file(sort_students)
-    write_discipline_students(sort_students)
-    write_scholarship_students(sort_students)
+        else:
+            second_closest = min(filter_student, key=sort_gpa) #finding the student with the minimum GPA
+            if second_closest: #if the list is not empty print the students information
+                print('No students withhin the range. Closest range is: ')
+                print(f'{second_closest.student_id}: {second_closest.first_name} {second_closest.last_name} GPA:{second_closest.gpa}')
+
+        user_input = input("Enter 'q' to quit or press Enter to continue \n") #prompts the user to quit or keep going
+        if user_input == 'q':
+            break
+
+if __name__ == "__main__": #main section of the code
+
+    gather_data = process_student_info() #function to read and sort files
+
+    student_query(gather_data) #handles the querys'
+
+
+
+
